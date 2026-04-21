@@ -13,7 +13,7 @@ class TelegramAuthService
 {
     private const string AUTH_URL  = 'https://oauth.telegram.org/auth';
     private const string TOKEN_URL = 'https://oauth.telegram.org/token';
-    private const string JWKS_URL  = 'https://oauth.telegram.org/jwks';
+    private const string JWKS_URL  = 'https://oauth.telegram.org/.well-known/jwks.json';
 
     public function redirect()
     {
@@ -47,7 +47,7 @@ class TelegramAuthService
 
         $clientId     = config('services.telegram.client_id');
         $clientSecret = config('services.telegram.client_secret');
-        $credentials  = base64_encode("$clientId:$clientSecret");
+        $credentials  = base64_encode("{$clientId}:{$clientSecret}");
 
         $response = Http::withHeaders([
             'Authorization' => 'Basic ' . $credentials,
@@ -63,8 +63,7 @@ class TelegramAuthService
             throw new Exception('Failed to fetch Telegram token: ' . $response->body());
         }
 
-        $tokens = $response->json();
-
+        $tokens  = $response->json();
         $payload = $this->verifyIdToken($tokens['id_token']);
 
         return [
@@ -75,7 +74,7 @@ class TelegramAuthService
 
     /**
      * JWT tokenni Telegram JWKS orqali kriptografik tekshirish.
-     * Kalitlar 1 soat keshlanadi — har so'rovda tarmoq chaqiruvi bo'lmaydi.
+     * Ochiq kalitlar 1 soat keshlanadi.
      */
     private function verifyIdToken(string $idToken): array
     {
@@ -86,13 +85,22 @@ class TelegramAuthService
                 throw new Exception('Failed to fetch Telegram JWKS: ' . $response->body());
             }
 
-            return $response->json();
+            $data = $response->json();
+
+            if (!\is_array($data)) {
+                throw new Exception('Invalid JWKS response from Telegram.');
+            }
+
+            return $data;
         });
 
-        $keys = JWK::parseKeySet($jwks);
+        if (!\is_array($jwks)) {
+            Cache::forget('telegram_jwks');
+            throw new Exception('Stale JWKS cache cleared, please retry.');
+        }
 
+        $keys    = JWK::parseKeySet($jwks);
         $decoded = JWT::decode($idToken, $keys);
-
         $payload = (array) $decoded;
 
         if (($payload['iss'] ?? '') !== 'https://oauth.telegram.org') {
