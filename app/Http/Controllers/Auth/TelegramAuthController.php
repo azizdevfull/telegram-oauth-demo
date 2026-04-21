@@ -1,24 +1,25 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendTelegramWelcomeMessage;
+use App\Models\User;
 use App\Services\TelegramAuthService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use Exception;
 use Illuminate\Support\Str;
 
 class TelegramAuthController extends Controller
 {
     public function __construct(
         private readonly TelegramAuthService $telegramAuthService
-    ) {
-    }
+    ) {}
 
     public function redirect()
     {
+
         return $this->telegramAuthService->redirect();
     }
 
@@ -27,7 +28,7 @@ class TelegramAuthController extends Controller
         try {
             $data = $this->telegramAuthService->handleCallback($request->all());
             info('data', [
-                'data' => $data
+                'data' => $data,
             ]);
             $telegramUser = $data['user'];
             // Tizimda foydalanuvchini topish yoki yangi yaratish
@@ -46,11 +47,13 @@ class TelegramAuthController extends Controller
             $welcomeText = "Assalomu alaykum, <b>{$user->name}</b>! Tizimimizga xush kelibsiz. Endi xabarnomalarni to'g'ridan-to'g'ri shu bot orqali qabul qilasiz.";
 
             SendTelegramWelcomeMessage::dispatch($user->telegram_id, $welcomeText);
+
             return redirect()->intended('/dashboard');
 
         } catch (Exception $e) {
             // Log yozish va xatolik sahifasiga yo'naltirish
             report($e);
+
             return redirect('/login')->with('error', 'Telegram orqali avtorizatsiya amalga oshmadi.');
         }
     }

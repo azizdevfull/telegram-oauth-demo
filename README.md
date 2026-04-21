@@ -330,7 +330,7 @@ Telegram OAuth ishlashi uchun **OAuth-ga ulangan bot** kerak. Bu oddiy bot emas 
 6. BotFather sizga client_id va client_secret beradi
 ```
 
-> **Muhim:** `APP_URL` dagi domen BotFather'da ro'yxatdan o'tgan domen bilan **bir xil** bo'lishi shart. Lokal ishlab chiqishda oddiy localhostxam bo'ladi.
+> **Muhim:** `APP_URL` dagi domen BotFather'da ro'yxatdan o'tgan domen bilan **bir xil** bo'lishi shart. Lokal ishlab chiqishda ngrok yoki alternative ishlating https uchun.
 
 ---
 

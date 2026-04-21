@@ -19,8 +19,7 @@ class SendTelegramWelcomeMessage implements ShouldQueue
     public function __construct(
         private readonly string $telegramId,
         private readonly string $message
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {
@@ -30,7 +29,7 @@ class SendTelegramWelcomeMessage implements ShouldQueue
         $response = Http::post($apiUrl, [
             'chat_id' => $this->telegramId,
             'text' => $this->message,
-            'parse_mode' => 'HTML'
+            'parse_mode' => 'HTML',
         ]);
 
         if ($response->failed()) {
