@@ -114,10 +114,11 @@ Bu loyiha Telegram'ning rasmiy **OAuth 2.0** tizimi (`oauth.telegram.org`) orqal
 
 ### Talablar
 
-- PHP >= 8.2
+- PHP >= 8.3
 - Composer
 - MySQL yoki PostgreSQL
 - Telegram Bot (BotFather orqali)
+- `firebase/php-jwt` ^7.0 (JWT imzo tekshiruvi uchun)
 
 ### Qadamlar
 
@@ -129,6 +130,8 @@ cd oauth-telegram
 # 2. Paketlarni o'rnatish
 composer install
 npm install
+
+# (firebase/php-jwt composer.json da mavjud, yuqoridagi install avtomatik o'rnatadi)
 
 # 3. Muhit faylini nusxalash
 cp .env.example .env
@@ -266,9 +269,40 @@ Http::withHeaders(['Authorization' => 'Basic ' . $credentials])
         'code_verifier' => Session::pull('telegram_code_verifier'),
     ]);
 
-// 3. JWT (id_token) ni dekod qilib foydalanuvchi ma'lumotlarini olamiz
-$payload = $this->decodeIdToken($tokens['id_token']);
-// payload: id, name, phone_number, picture ...
+// 3. JWT (id_token) imzosini JWKS orqali kriptografik tekshiramiz
+$payload = $this->verifyIdToken($tokens['id_token']);
+// payload: sub, name, phone_number, picture, iss, aud, exp ...
+```
+
+**`verifyIdToken()` metodi — `firebase/php-jwt` bilan:**
+
+```php
+private function verifyIdToken(string $idToken): array
+{
+    // Telegram JWKS kalitlarini 1 soat keshlaymiz
+    $jwks = Cache::remember('telegram_jwks', 3600, function () {
+        return Http::get('https://oauth.telegram.org/jwks')->json();
+    });
+
+    // JWK::parseKeySet — Telegram'ning ochiq kalitlarini parse qiladi
+    $keys = JWK::parseKeySet($jwks);
+
+    // JWT::decode — imzoni tekshiradi va payload'ni qaytaradi
+    // Imzo noto'g'ri bo'lsa — avtomatik Exception tashlaydi
+    $decoded = JWT::decode($idToken, $keys);
+
+    $payload = (array) $decoded;
+
+    // Issuer va Audience ni tekshiramiz
+    if ($payload['iss'] !== 'https://oauth.telegram.org') {
+        throw new Exception('Invalid token issuer.');
+    }
+    if ($payload['aud'] !== config('services.telegram.client_id')) {
+        throw new Exception('Invalid token audience.');
+    }
+
+    return $payload;
+}
 ```
 
 ### `TelegramAuthController` — foydalanuvchi yaratish
@@ -338,12 +372,11 @@ Avtorizatsiya so'rovida qaysi ma'lumotlarni so'rashni `scope` parametri orqali b
 |---|---|
 | **CSRF hujumi** | `state` parametri sessiyada saqlanib, callback da tekshiriladi |
 | **Code interception** | PKCE: `code_verifier` sessiyada, `code_challenge` Telegram'da — ikkalasi bo'lmasa token olmaydi |
-| **JWT imzosi** | ⚠️ Hozir imzo **tekshirilmayapti** — production'da `firebase/php-jwt` bilan JWKS orqali tekshiring |
+| **JWT imzosi** | `firebase/php-jwt` + JWKS — Telegram'ning ochiq kalitlari bilan RS256 imzosi tekshiriladi |
+| **Issuer / Audience** | `iss === oauth.telegram.org` va `aud === client_id` tekshiruvi bajariladi |
+| **JWKS keshlash** | Kalitlar 1 soat keshlanadi — har so'rovda tarmoq chaqiruvi bo'lmaydi |
 | **Bot token** | `.env` da saqlash, hech qachon kodga yozmaslik |
 | **HTTPS** | Production'da albatta SSL sertifikati bo'lishi shart |
-
-> **Production uchun muhim qo'shimcha:**  
-> `TelegramAuthService::decodeIdToken()` metodini `firebase/php-jwt` paketi bilan almashtirib, Telegram'ning JWKS endpointidan kalitlarni olib, JWT imzosini tekshiring.
 
 ---
 
