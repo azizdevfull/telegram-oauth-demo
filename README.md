@@ -7,17 +7,28 @@
 
 ## Mundarija
 
-- [Loyiha haqida](#loyiha-haqida)
-- [Arxitektura](#arxitektura)
-- [OAuth 2.0 + PKCE jarayoni](#oauth-20--pkce-jarayoni)
-- [O'rnatish](#ornatish)
-- [Muhit sozlamalari (.env)](#muhit-sozlamalari-env)
-- [Telegram Bot yaratish](#telegram-bot-yaratish)
-- [Fayl tuzilishi](#fayl-tuzilishi)
-- [Kod tushuntirmasi](#kod-tushuntirmasi)
-- [Mavjud Scope'lar (Ruxsatlar)](#mavjud-scopelar-ruxsatlar)
-- [Xavfsizlik eslatmalari](#xavfsizlik-eslatmalari)
-- [Ishga tushirish](#ishga-tushirish)
+- [Laravel — Telegram OAuth 2.0 + PKCE Qo'llanmasi](#laravel--telegram-oauth-20--pkce-qollanmasi)
+  - [Mundarija](#mundarija)
+  - [Loyiha haqida](#loyiha-haqida)
+    - [Asosiy imkoniyatlar](#asosiy-imkoniyatlar)
+  - [Arxitektura](#arxitektura)
+  - [OAuth 2.0 + PKCE jarayoni](#oauth-20--pkce-jarayoni)
+  - [O'rnatish](#ornatish)
+    - [Talablar](#talablar)
+    - [Qadamlar](#qadamlar)
+  - [Muhit sozlamalari (.env)](#muhit-sozlamalari-env)
+  - [Telegram Bot yaratish](#telegram-bot-yaratish)
+    - [BotFather orqali sozlash](#botfather-orqali-sozlash)
+  - [Fayl tuzilishi](#fayl-tuzilishi)
+  - [Kod tushuntirmasi](#kod-tushuntirmasi)
+    - [`TelegramAuthService` — asosiy mantiq](#telegramauthservice--asosiy-mantiq)
+    - [`TelegramAuthController` — foydalanuvchi yaratish](#telegramauthcontroller--foydalanuvchi-yaratish)
+    - [`<x-telegram-login-button />` — Blade komponenti](#x-telegram-login-button---blade-komponenti)
+  - [Mavjud Scope'lar (Ruxsatlar)](#mavjud-scopelar-ruxsatlar)
+    - [Loyihadagi sozlama](#loyihadagi-sozlama)
+  - [Xavfsizlik eslatmalari](#xavfsizlik-eslatmalari)
+  - [Ishga tushirish](#ishga-tushirish)
+  - [Litsenziya](#litsenziya)
 
 ---
 
@@ -182,7 +193,7 @@ Telegram OAuth ishlashi uchun **OAuth-ga ulangan bot** kerak. Bu oddiy bot emas 
 6. BotFather sizga client_id va client_secret beradi
 ```
 
-> **Muhim:** `APP_URL` dagi domen BotFather'da ro'yxatdan o'tgan domen bilan **bir xil** bo'lishi shart. Lokal ishlab chiqishda [ngrok](https://ngrok.com) yoki `localtunnel` ishlating.
+> **Muhim:** `APP_URL` dagi domen BotFather'da ro'yxatdan o'tgan domen bilan **bir xil** bo'lishi shart. Lokal ishlab chiqishda oddiy localhostxam bo'ladi.
 
 ---
 
