@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,10 +12,21 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+
+            // Telegram uchun maxsus maydonlar
+            $table->string('telegram_id')->unique()->nullable();
+
             $table->string('name');
-            $table->string('email')->unique();
+
+            // Email va Password OAuth foydalanuvchilari uchun nullable bo'lishi shart
+            $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();
+
+            // Qo'shimcha ma'lumotlar
+            $table->string('phone')->unique()->nullable();
+            $table->string('avatar')->nullable();
+
             $table->rememberToken();
             $table->timestamps();
         });
